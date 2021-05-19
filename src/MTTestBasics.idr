@@ -1,11 +1,8 @@
--- Idris 2
-
-import Queues
-import MTSafeChannels
-
 import System
-import Data.IORef
 
+import System.Concurrency.Pipe
+
+{-- TODO: REWRITE EVERYTHING!
 senderError : (senderID : Int) -> (errMsg : String) -> IO ()
 senderError senderID errMsg =
   putStrLn $ "S" ++ (show senderID) ++ ": ERROR: " ++ errMsg
@@ -369,4 +366,5 @@ runAll = do testReceiveEmpty
 
 main : IO ()
 main = runAll
+-- }
 

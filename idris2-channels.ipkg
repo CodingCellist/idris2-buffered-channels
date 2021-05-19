@@ -1,0 +1,49 @@
+package idris2-channels
+-- version =
+authors = "Thomas E. Hansen"
+-- maintainers =
+-- license =
+-- brief =
+-- readme =
+-- homepage =
+-- sourceloc =
+-- bugtracker =
+
+-- packages to add to search path
+-- depends =
+
+-- modules to install
+modules = MTTestBasics,
+          MTTestHandshake,
+          MTTestQueues,
+          System.Concurrency.BufferedChannel,
+          System.Concurrency.Pipe,
+          System.Concurrency.Queue
+
+-- main file (i.e. file to load at REPL)
+-- main =
+
+-- name of executable
+-- executable =
+-- opts =
+sourcedir = "src"
+-- builddir =
+-- outputdir =
+
+-- script to run before building
+-- prebuild =
+
+-- script to run after building
+-- postbuild =
+
+-- script to run after building, before installing
+-- preinstall =
+
+-- script to run after installing
+-- postinstall =
+
+-- script to run before cleaning
+-- preclean =
+
+-- script to run after cleaning
+-- postclean =

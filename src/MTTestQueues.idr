@@ -1,11 +1,8 @@
--- Idris 2
-
-import Queues
-
 import System
-import Data.IORef
-import System.Concurrency.Raw
 
+import System.Concurrency.Pipe
+
+{-- TODO: REWRITE EVERYTHING!
 testMakeQueue : IO ()
 testMakeQueue = do putStrLn "--- Begin testMakeQueue ---"
                    qRef <- makeQueue
@@ -105,4 +102,5 @@ runAll = do testMakeQueue
 
 main : IO ()
 main = runAll
+--}
 
