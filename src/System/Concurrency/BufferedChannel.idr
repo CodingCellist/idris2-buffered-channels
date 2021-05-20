@@ -27,7 +27,7 @@ data BufferedChannel : Type -> Type where
 ||| - @becomeSender@
 ||| - @becomeReceiver@
 export
-makeBufferedChannel : {a : _} -> IO (IORef (BufferedChannel a))
+makeBufferedChannel : IO (IORef (BufferedChannel a))
 makeBufferedChannel =
   do cl <- makeMutex
      cv <- makeCondition
