@@ -34,11 +34,21 @@ makeBufferedChannel =
      q  <- makeQueue
      newIORef (MkBufferedChannel cl cv q)
 
+
+-- Sending --
+
 ||| The type of a sender function is something which takes a channel and a thing
 ||| to send, and produces an empty IO action, i.e. the sending of the message.
 public export
 SenderFunc : Type -> Type
 SenderFunc a = BufferedChannel a -> a -> IO ()
+
+||| What sending should do to the BufferedChannel's internal Condition Variable:
+||| - Signalling wakes 1 thread waiting to receive, if there are any.
+||| - Broadcasting wakes all the threads waiting to receive, if there are any.
+public export
+data SendEffect = Signal
+                | Broadcast
 
 ||| Send a thing on the BufferedChannel and signal its internal condition
 ||| variable.
@@ -58,12 +68,34 @@ sendAndBroadcast (MkBufferedChannel _ condVar qRef) thing =
   do enqueue qRef thing
      conditionBroadcast condVar
 
-||| The type of a receiver function is something which takes a channel and
-||| produces an IO action containing a thing on the channel, i.e. the receiving
-||| of the message.
+||| Given a reference to a BufferedChannel and the desired effect sending should
+||| have on any potentially waiting receiver-threads, obtain the channel and the
+||| ability to send on the channel.
+export
+becomeSender : SendEffect
+             -> (bcRef : IORef (BufferedChannel a))
+             -> IO (dc : BufferedChannel a ** (SenderFunc a))
+becomeSender sendEff bcRef =
+  do bc <- readIORef bcRef
+     case sendEff of
+          Signal => pure (MkDPair bc sendAndSignal)
+          Broadcast => pure (MkDPair bc sendAndBroadcast)
+
+
+-- Receiving --
+
+||| The type of a receiver function which takes a channel and produces an IO
+||| action containing the next thing on the channel if there is one, and Nothing
+||| otherwise.
 public export
-ReceiverFunc : Type -> Type
-ReceiverFunc a = BufferedChannel a -> IO a
+NonBlockingReceiver : Type -> Type
+NonBlockingReceiver a = BufferedChannel a -> IO (Maybe a)
+
+||| The type of a receiver function which takes a channel and produces an
+||| IO action which is guaranteed to contain the next thing on the channel.
+public export
+BlockingReceiver : Type -> Type
+BlockingReceiver a = BufferedChannel a -> IO a
 
 ||| Crash Idris with a message signalling that something went wrong in terms of
 ||| the fundamental guarantees of condition variables.
@@ -75,11 +107,19 @@ await_crash : IO a
 await_crash =
   assert_total $ idris_crash "Await somehow got Nothing despite waiting on a CV"
 
-||| Block on the BufferdChannel's internal condition variable until a thing
-||| arrives, and at that point, retrieve the thing.
+||| Try to receive a thing on the channel without blocking until something
+||| appears.
 |||
 ||| MTSafe: YES
-await : ReceiverFunc a
+receive : NonBlockingReceiver a
+receive (MkBufferedChannel condLock condVar qRef) = dequeue qRef
+
+||| Try to receive the next thing and if there is Nothing, block on the
+||| BufferedChannel's internal condition variable until something arrives, and
+||| at that point, retrieve that thing.
+|||
+||| MTSafe: YES
+await : BlockingReceiver a
 await (MkBufferedChannel condLock condVar qRef) =
   do (Just thing) <- dequeue qRef
           -- if there wasn't anything in the queue, wait until something appears
@@ -91,21 +131,28 @@ await (MkBufferedChannel condLock condVar qRef) =
                         pure thing'
      pure thing
 
-||| Given a reference to a BufferdChannel, obtain the ability to send on the
-||| channel.
-export
-becomeSender : (bcRef : IORef (BufferedChannel a))
-             -> IO (dc : BufferedChannel a ** (SenderFunc a))
-becomeSender bcRef =
-  do theBC <- readIORef bcRef
-     pure (MkDPair theBC sendAndSignal)
+||| How receiving on a channel should behave:
+||| - A non-blocking receiver is not guaranteed to always get a thing when it
+|||   receives, but never blocks the receiving thread.
+||| - A blocking receiver is guaranteed to always get a thing when it receives,
+|||   but may block the receiving thread until something arrives.
+public export
+data ReceiveType = NonBlocking
+                 | Blocking
 
-||| Given a reference to a BufferedChannel, obtain the ability to receive on the
-||| channel.
+||| Given a reference to a BufferedChannel and a choice between weather the
+||| receive operation should block the thread until something arrives or not,
+||| obtain the channel and the ability to receive on it in the desired manner.
 export
-becomeReceiver : (bcRef : IORef (BufferedChannel a))
-               -> IO (dc : BufferedChannel a ** (ReceiverFunc a))
-becomeReceiver bcRef =
-  do theBC <- readIORef bcRef
-     pure (MkDPair theBC await)
+becomeReceiver : (1 recvType : ReceiveType)
+               -> (bcRef : IORef (BufferedChannel a))
+               -> case recvType of
+                       NonBlocking => IO (dc : BufferedChannel a
+                                               ** (NonBlockingReceiver a))
+                       Blocking => IO (dc : BufferedChannel a
+                                            ** (BlockingReceiver a))
+becomeReceiver NonBlocking bcRef = do bc <- readIORef bcRef
+                                      pure (MkDPair bc receive)
+becomeReceiver Blocking bcRef = do bc <- readIORef bcRef
+                                   pure (MkDPair bc await)
 
