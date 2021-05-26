@@ -6,10 +6,10 @@ import System.Concurrency.BufferedChannel
 main : IO ()
 main = do bcRef <- makeBufferedChannel
           let val = 3
-          (MkDPair bc send) <- becomeSender Signal bcRef
+          (MkDPair bc send) <- becomeSender bcRef
           (MkDPair bc' recv) <- becomeReceiver Blocking bcRef
 
-          send bc val
+          send Signal bc val
           val' <- recv bc'
           if val /= val'
              then putStrLn "ERROR: Value changed in transit."

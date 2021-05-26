@@ -7,9 +7,9 @@ main : IO ()
 main = do bcRef <- makeBufferedChannel
           let val = 3
           (MkDPair bc recv) <- becomeReceiver Blocking bcRef
-          child <- fork $ do (MkDPair bc' send) <- becomeSender Broadcast bcRef
+          child <- fork $ do (MkDPair bc' send) <- becomeSender bcRef
                              sleep 1
-                             send bc' val
+                             send Broadcast bc' val
           val' <- recv bc
           if val /= val'
              then putStrLn "ERROR: Value changed in transit."

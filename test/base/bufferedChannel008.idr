@@ -6,10 +6,10 @@ main : IO ()
 main = do bcRef <- makeBufferedChannel
           let val1 = 1
           let val2 = 2
-          (MkDPair bc send) <- becomeSender Signal bcRef
+          (MkDPair bc send) <- becomeSender bcRef
           (MkDPair bc' recv) <- becomeReceiver Blocking bcRef
-          send bc val1
-          send bc val2
+          send Signal bc val1
+          send Signal bc val2
           val1' <- recv bc'
           val2' <- recv bc'
           if val1 /= val1'

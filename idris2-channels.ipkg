@@ -13,10 +13,7 @@ authors = "Thomas E. Hansen"
 -- depends =
 
 -- modules to install
-modules = MTTestBasics,
-          MTTestHandshake,
-          MTTestQueues,
-          System.Concurrency.BufferedChannel,
+modules = System.Concurrency.BufferedChannel,
           System.Concurrency.Pipe,
           System.Concurrency.Queue
 
@@ -47,3 +44,4 @@ sourcedir = "src"
 
 -- script to run after cleaning
 -- postclean =
+

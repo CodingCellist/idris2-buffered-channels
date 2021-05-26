@@ -4,7 +4,7 @@ import System.Concurrency.BufferedChannel
 
 main : IO ()
 main = do bcRef <- makeBufferedChannel
-          (MkDPair bc send) <- becomeSender Signal bcRef
-          send bc 3
+          (MkDPair bc send) <- becomeSender bcRef
+          send Signal bc 3
           putStrLn "Success."
 

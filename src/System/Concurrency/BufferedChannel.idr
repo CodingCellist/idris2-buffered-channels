@@ -68,18 +68,25 @@ sendAndBroadcast (MkBufferedChannel _ condVar qRef) thing =
   do enqueue qRef thing
      conditionBroadcast condVar
 
+||| Send a thing on the BC, affecting the internal CV in the specified way
+send : SendEffect -> SenderFunc a
+send Signal = sendAndSignal
+send Broadcast = sendAndBroadcast
+
 ||| Given a reference to a BufferedChannel and the desired effect sending should
 ||| have on any potentially waiting receiver-threads, obtain the channel and the
 ||| ability to send on the channel.
 export
-becomeSender : SendEffect
-             -> (bcRef : IORef (BufferedChannel a))
-             -> IO (dc : BufferedChannel a ** (SenderFunc a))
-becomeSender sendEff bcRef =
+becomeSender : (bcRef : IORef (BufferedChannel a))
+             -> IO (dc : BufferedChannel a ** (SendEffect -> SenderFunc a))
+becomeSender bcRef =
   do bc <- readIORef bcRef
-     case sendEff of
-          Signal => pure (MkDPair bc sendAndSignal)
-          Broadcast => pure (MkDPair bc sendAndBroadcast)
+     pure (MkDPair bc send)
+
+--  do bc <- readIORef bcRef
+--     case sendEff of
+--          Signal => pure (MkDPair bc sendAndSignal)
+--          Broadcast => pure (MkDPair bc sendAndBroadcast)
 
 
 -- Receiving --
