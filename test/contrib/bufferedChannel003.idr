@@ -1,10 +1,10 @@
--- test that sendAndSignal doesn't block
+-- test that sendAndBroadcast doesn't block
 
 import System.Concurrency.BufferedChannel
 
 main : IO ()
 main = do bcRef <- makeBufferedChannel
           (MkDPair bc send) <- becomeSender bcRef
-          send Signal bc 3
-          putStrLn "Success."
+          send Broadcast bc 3
+          putStrLn "Success!"
 

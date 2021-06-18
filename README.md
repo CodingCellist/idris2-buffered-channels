@@ -1,4 +1,4 @@
-# idris2-channels
+# idris2-buffered-channels
 
 This is an attempt at creating channels in Idris2, as part of enabling
 somebody to complete Chapter 15 of the book "Type-Driven Development with
@@ -22,4 +22,8 @@ process is a sender or a receiver
 
 Both BufferedChannels and Pipes support waiting for things to arrive by using
 Condition Variables.
+
+# LICENSE
+
+This work is licensed under the BSD-3-Clause license.
 

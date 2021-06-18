@@ -9,5 +9,5 @@ main = do q <- makeQueue {a=Nat}
             | Nothing => putStrLn "ERROR: Value disappeared from queue."
           Nothing <- dequeue q
             | (Just huh) => putStrLn "ERROR: Dequeue didn't remove the item."
-          putStrLn "Success."
+          putStrLn "Success!"
 

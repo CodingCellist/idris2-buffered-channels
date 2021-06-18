@@ -14,5 +14,5 @@ main = do bcRef <- makeBufferedChannel
             | Nothing => putStrLn "ERROR: Value disappeared from channel."
           Nothing <- recv bc'
             | (Just _) => putStrLn "ERROR: Sent a single thing but received 2."
-          putStrLn "Success."
+          putStrLn "Success!"
 

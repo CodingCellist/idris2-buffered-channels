@@ -15,5 +15,5 @@ main = do bcRef <- makeBufferedChannel
             | Nothing => putStrLn "ERROR: Value disappeared from channel."
           if val /= val'
              then putStrLn "ERROR: Value changed in transit."
-             else putStrLn "Success."
+             else putStrLn "Success!"
 

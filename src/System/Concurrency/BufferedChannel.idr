@@ -2,6 +2,7 @@
 ||| Queues being MTSafe, and buffered as it operates using a Queue of things.
 module System.Concurrency.BufferedChannel
 
+import public Data.List
 import System.Concurrency
 
 import public System.Concurrency.Queue
@@ -38,7 +39,7 @@ makeBufferedChannel =
 -- Sending --
 
 ||| The type of a sender function is something which takes a channel and a thing
-||| to send, and produces an empty IO action, i.e. the sending of the message.
+||| to send, and produces an empty IO action, i.e. the sending of the thing.
 public export
 SenderFunc : Type -> Type
 SenderFunc a = BufferedChannel a -> a -> IO ()
@@ -68,14 +69,44 @@ sendAndBroadcast (MkBufferedChannel _ condVar qRef) thing =
   do enqueue qRef thing
      conditionBroadcast condVar
 
-||| Send a thing on the BC, affecting the internal CV in the specified way
+||| Send a thing on the BC, affecting the internal CV in the specified way.
 send : SendEffect -> SenderFunc a
 send Signal = sendAndSignal
 send Broadcast = sendAndBroadcast
 
-||| Given a reference to a BufferedChannel and the desired effect sending should
-||| have on any potentially waiting receiver-threads, obtain the channel and the
-||| ability to send on the channel.
+||| The type of a buffer function is something which takes a channel and
+||| non-empty list of things to send, and produces an empty IO action, i.e. the
+||| sending of the things.
+public export
+BufferFunc : Type -> Type
+BufferFunc a =
+  BufferedChannel a -> (items : List a) -> {auto 0 ok : NonEmpty items} -> IO ()
+
+||| Send some things in bulk on the BufferedChannel and signal its internal
+||| condition variable.
+bufferAndSignal : BufferFunc a
+bufferAndSignal (MkBufferedChannel _ condVar qRef) things =
+  do ignore $ traverse (\thing => enqueue qRef thing) things
+     conditionSignal condVar
+
+||| Send some things in bulk on the BufferedChannel and broadcast its internal
+||| condition variable.
+bufferAndBroadcast : BufferFunc a
+bufferAndBroadcast (MkBufferedChannel _ condVar qRef) things =
+  do ignore $ traverse (\thing => enqueue qRef thing) things
+     conditionBroadcast condVar
+
+||| Buffer a list of things on the BC, affecting the internal CV in the
+||| specified way.
+buffer : SendEffect -> BufferFunc a
+buffer Signal = bufferAndSignal
+buffer Broadcast = bufferAndBroadcast
+
+-- Obtaining send access --
+
+||| Given a reference to a BufferedChannel obtain the channel and the ability to
+||| send on the channel given the desired effect sending should have on any
+||| potentially waiting receiver-threads.
 export
 becomeSender : (bcRef : IORef (BufferedChannel a))
              -> IO (dc : BufferedChannel a ** (SendEffect -> SenderFunc a))
@@ -83,11 +114,15 @@ becomeSender bcRef =
   do bc <- readIORef bcRef
      pure (MkDPair bc send)
 
---  do bc <- readIORef bcRef
---     case sendEff of
---          Signal => pure (MkDPair bc sendAndSignal)
---          Broadcast => pure (MkDPair bc sendAndBroadcast)
-
+||| Given a reference to a BufferedChannel obtain the channel and the ability to
+||| buffer a list of items on the channel given the desired effect sending
+||| should have on any potentially waiting receiver-threads.
+export
+becomeBuffer : (bcRef : IORef (BufferedChannel a))
+             -> IO (dc : BufferedChannel a ** (SendEffect -> BufferFunc a))
+becomeBuffer bcRef =
+  do bc <- readIORef bcRef
+     pure (MkDPair bc buffer)
 
 -- Receiving --
 
@@ -137,6 +172,8 @@ await (MkBufferedChannel condLock condVar qRef) =
                         mutexRelease condLock
                         pure thing'
      pure thing
+
+-- Obtaining receive access --
 
 ||| How receiving on a channel should behave:
 ||| - A non-blocking receiver is not guaranteed to always get a thing when it

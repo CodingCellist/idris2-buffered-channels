@@ -16,5 +16,5 @@ main = do bcRef <- makeBufferedChannel
              then putStrLn "ERROR: First value changed in transit."
              else if val2 /= val2'
                      then putStrLn "ERROR: Second value changed in transit."
-                     else putStrLn "Success."
+                     else putStrLn "Success!"
 

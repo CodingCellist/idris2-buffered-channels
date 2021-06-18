@@ -1,13 +1,13 @@
-package idris2-channels
+package buffered-channels
 -- version =
 authors = "Thomas E. Hansen"
 -- maintainers =
--- license =
+license = "BSD-3-Clause"
 -- brief =
 -- readme =
 -- homepage =
--- sourceloc =
--- bugtracker =
+sourceloc = "https://github.com/CodingCellist/idris2-buffered-channels"
+bugtracker = "https://github.com/CodingCellist/idris2-buffered-channels/issues"
 
 -- packages to add to search path
 -- depends =

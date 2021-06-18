@@ -11,6 +11,6 @@ main = do q <- makeQueue {a=Nat}
           (Just theVal') <- peek q
             | Nothing => putStrLn "ERROR: Peek removed the item."
           if (val == theVal) && (val == theVal')
-             then putStrLn "Success."
+             then putStrLn "Success!"
              else putStrLn "ERROR: Value changed between calls to peek."
 
