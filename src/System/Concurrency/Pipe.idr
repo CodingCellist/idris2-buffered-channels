@@ -25,8 +25,7 @@ data Pipe : (rdT : Type) -> (wrT : Type) -> Type where
 
 ||| Create a new Pipe.
 export
-makePipe : {rdT : Type} -> {wrT : Type}
-         -> IO (IORef (Pipe rdT wrT))
+makePipe : IO (IORef (Pipe rdT wrT))
 makePipe = do iQueue <- makeQueue
               iCondLock <- makeMutex
               iCondVar <- makeCondition
