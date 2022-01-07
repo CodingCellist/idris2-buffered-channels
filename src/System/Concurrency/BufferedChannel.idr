@@ -139,16 +139,6 @@ public export
 BlockingReceiver : Type -> Type
 BlockingReceiver a = BufferedChannel a -> IO a
 
-||| Crash Idris with a message signalling that something went wrong in terms of
-||| the fundamental guarantees of condition variables.
-|||
-||| Essentially, the point of waiting on a CV is to wait until something is
-||| available for consumption. So as soon as the CV lets us past, there will be
-||| something to retrieve. However, Idris doesn't know this.
-await_crash : IO a
-await_crash =
-  assert_total $ idris_crash "Await somehow got Nothing despite waiting on a CV"
-
 ||| Try to receive a thing on the channel without blocking until something
 ||| appears.
 |||
@@ -167,10 +157,12 @@ await (MkBufferedChannel condLock condVar qRef) =
           -- if there wasn't anything in the queue, wait until something appears
         | Nothing => do mutexAcquire condLock
                         conditionWait condVar condLock
-                        (Just thing') <- dequeue qRef
-                           | Nothing => await_crash
+                        thing' <- dequeue qRef
                         mutexRelease condLock
-                        pure thing'
+                        -- retry if Nothing is received for whatever reason
+                        case thing' of
+                          Just thing' => pure thing'
+                          Nothing => assert_total $ await (MkBufferedChannel condLock condVar qRef)
      pure thing
 
 -- Obtaining receive access --
