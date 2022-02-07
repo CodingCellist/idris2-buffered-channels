@@ -38,7 +38,7 @@ $ sirdi install
 ## Using Idris2/ipkg
 
 ```
-make install
+$ make install
 ```
 
 
