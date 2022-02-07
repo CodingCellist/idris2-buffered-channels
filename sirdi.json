@@ -1,0 +1,11 @@
+[ { "name": "buffered-channels"
+  , "version": "0.1.1"
+  , "license": "BSD-3-Clause"
+  , "authors": "Thomas E. Hansen (CodingCellist)"
+  , "modules": [ "System.Concurrency.Queue"
+               , "System.Concurrency.Pipe"
+               , "System.Concurrency.BufferedChannel"
+               ]
+  , "deps": []
+  }
+]
